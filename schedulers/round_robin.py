@@ -1,5 +1,8 @@
 from scheduler import Scheduler
 
 class RoundRobin (Scheduler):
-    def __init__ (self, data):
-        Scheduler.__init__()
+    def __init__ (self):
+        Scheduler.__init__(self)
+    
+    def run():
+        pass
