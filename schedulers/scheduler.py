@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 
 class Scheduler(ABC):
-    def __init__():
+    def __init__(self):
+        self.gantt = []
         pass
 
     def cpu_util(self):
