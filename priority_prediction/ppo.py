@@ -1,6 +1,9 @@
+import numpy as np
 import torch
+import gym
 from torch.distributions import MultivariateNormal
-
+from torch.optim import Adam
+from torch.nn import MSELoss
 
 from network import FeedForwardNN
 
@@ -12,6 +15,9 @@ class PPO:
         self.obs_enc_dim = obs_enc_dim
         self.act_dim = env.action_space.shape[0]
 
+        # Hyperparameters
+        self._init_hyperparameters()
+
         # ALG STEP 1
         # Actor and critic networks
         self.actor = FeedForwardNN(self.obs_enc_dim, self.act_dim)
@@ -20,8 +26,10 @@ class PPO:
         # Observations encoder
         self.obs_enc = FeedForwardNN(self.obs_dim, self.obs_enc_dim)
 
-        # Hyperparameters
-        self._init_hyperparameters()
+        # Network optimizers
+        self.actor_optim = Adam(self.actor.parameters(), lr = self.lr)
+        self.critic_optim = Adam(self.critic.parameters(), lr = self.lr)
+        self.obs_enc_optim = Adam(self.obs_enc.parameters(), lr = self.lr)
 
         # Multivariate Normal Stats
         self.cov_var = torch.full(size=(self.act_dim,), fill_value=0.5)
@@ -32,13 +40,60 @@ class PPO:
         self.timesteps_per_batch = 4800
         self.max_timesteps_per_episode = 1600
         self.gamma = 0.95 # reward decay
+        self.n_updates_per_iteration = 5
+        self.clip = 0.2 # recommended by PPO paper
+        self.lr = 0.005
 
     def learn(self, n_steps):
         n = 0 # number of steps taken
         while n < n_steps: # ALG STEP 2
             # ALG STEP 3
             batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens = self.rollout()
-        pass
+
+            # Calculate how many timesteps collected in batch
+            n += np.sum(batch_lens)
+            
+            # Calculate V_{phi, k}
+            V, _ = self.evaluate(batch_obs, batch_acts)
+
+            # ALG STEP 5 - Calculate Advantage
+            A_k = batch_rtgs - V.detach()
+
+            # As found empirically by Eric Yu, using raw advantage values can lead to training instability,
+            # so this project follows his advice and uses normalized advantage
+            A_k = (A_k - A_k.mean()) / (A_k.std() + 1e-10)
+
+            # ALG STEP 6 & 7
+            for _ in range(self.n_updates_per_iteration):
+                # Calculate pi_theta(a_t | s_t)
+                V, curr_log_probs = self.evaluate(batch_obs, batch_acts)
+
+                # Calculate ratio from PPO algorithm
+                ratios = torch.exp(curr_log_probs - batch_log_probs)
+
+                # calculate surrogate losses from PPO algorithm
+                surr1 = ratios * A_k
+                surr2 = torch.clamp(ratios, 1-self.clip, 1+self.clip) * A_k
+
+                # Calculate losses.  Use Actor loss to pass through to encoder
+                actor_loss = (-torch.min(surr1, surr2)).mean()
+                critic_loss = MSELoss()(V, batch_rtgs)
+                encoder_loss = (-torch.min(surr1, surr2)).mean()
+                
+                # Perform backward propogation for actor network
+                self.actor_optim.zero_grad()
+                actor_loss.backward(retain_graph=True)
+                self.actor_optim.step()
+
+                # Perform backward propogation for actor network
+                self.critic_optim.zero_grad()
+                critic_loss.backward(retain_graph=True)
+                self.critic_optim.step()
+
+                # Perform backward propogation for encoder network
+                self.obs_enc_optim.zero_grad()
+                encoder_loss.backward()
+                self.obs_enc_optim.step()
 
     def rollout(self):
         # batch data
@@ -56,7 +111,7 @@ class PPO:
             # Rewards this episode
             ep_rews = []
 
-            obs = self.env.reset()
+            obs, _ = self.env.reset()
             done = False
 
             for ep_t in range(self.max_timesteps_per_episode):
@@ -67,7 +122,7 @@ class PPO:
                 batch_obs.append(obs)
 
                 action, log_prob = self.get_action(obs)
-                obs, rew, done, _ = self.env.step(action)
+                obs, rew, done, _, _ = self.env.step(action)
 
                 # Collect reward, action, and log_prob
                 ep_rews.append(rew)
@@ -82,9 +137,9 @@ class PPO:
             batch_rews.append(ep_rews)
         
         # reshape as tensors 
-        batch_obs = torch.tensor(batch_obs, dtype=torch.float)
-        batch_acts = torch.tensor(batch_acts, dtype=torch.float)
-        batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float)
+        batch_obs = torch.tensor(np.array(batch_obs), dtype=torch.float)
+        batch_acts = torch.tensor(np.array(batch_acts), dtype=torch.float)
+        batch_log_probs = torch.tensor(np.array(batch_log_probs), dtype=torch.float)
 
         # ALG STEP 4 - Compute rewards-to-go
         batch_rtgs = self.compute_rtgs(batch_rews)
@@ -123,3 +178,19 @@ class PPO:
 
         return batch_rtgs
 
+    def evaluate(self, batch_obs, batch_acts):
+        # query critic network for value V for each obs in batch_obs after encoding
+        enc_batch_obs = self.obs_enc(batch_obs)
+        V = self.critic(enc_batch_obs).squeeze()
+
+        # get log probabilities
+        mean = self.actor(enc_batch_obs)
+        dist = MultivariateNormal(mean, self.cov_mat)
+        log_probs = dist.log_prob(batch_acts)
+
+        return V, log_probs
+    
+env = gym.make('Pendulum-v1')
+model = PPO(env, 64)
+torch.autograd.set_detect_anomaly(True)
+model.learn(10000)
