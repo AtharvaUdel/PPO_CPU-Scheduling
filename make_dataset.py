@@ -7,7 +7,8 @@ def getRandomGenerator(name, seed):
     return generators[name]
 
 def execute(args):
-    rng = getRandomGenerator(args.distribution, args.seed)
+    random_dist = args.distribution
+    random_seed = args.seed
     print(args)
 
     n = args.number
@@ -15,10 +16,39 @@ def execute(args):
     max_arrival = args.max_arrival
 
     data = np.zeros(shape=(n, 3), dtype=np.int16)
-    arrival_gen = np.random.default_rng(seed=args.seed)
-    arrival = arrival_gen.uniform(0, max_arrival, n).sort()
-    
+    pid = np.array(list(range(n)))
+    arrival_gen = np.random.default_rng(seed=random_seed)
+    arrivals = arrival_gen.uniform(0, max_arrival, n)
+    arrivals.sort()
+    distribution_gen = np.random.default_rng(seed = random_seed)
+    if random_dist == 'n':
+        n_instructions = distribution_gen.normal(0,1,size=n) # standard normal distribution
+        n_instructions = np.clip(n_instructions, -3, 3) + 3 # normal distribution is 0 mean and has infinite support, so must be clipped and recentered. 99.83% of data falls within (-3,3) bounds
+        n_instructions = ((n_instructions / 6) * max_instructions).astype(np.int16) # scale 0-1 and rescale to max, then cast to int
+    elif random_dist == 'u':
+        n_instructions = distribution_gen.uniform(low=0, high=max_instructions, size=n).astype(np.int16)
+    elif random_dist == 'f':
+        n_instructions = distribution_gen.f(5, 10, size=n) # F-distribution, range (0, inf)
+        n_instructions = np.clip(n_instructions, 0, 10) # 99.88% of values fall within (0,10)
+        n_instructions = ((n_instructions / 10) * max_instructions).astype(np.int16) # scale 0-1 and rescale to max, then cast to int
+    elif random_dist == 'cs':
+        n_instructions = distribution_gen.chisquare(3, size=n) # chi squared distribution, range (0, inf)
+        n_instructions = np.clip(n_instructions, 0, 10) # 98.14% of values fall within (0,10)
+        n_instructions = ((n_instructions / 10) * max_instructions).astype(np.int16) # scale 0-1 and rescale to max, then cast to int
+    else:
+        print('Specified distribution not implemented')
+        exit
 
+    print(pid[:5])
+    print(arrivals[:5])
+    print(n_instructions[:5])
+
+    data[:,0] = pid
+    data[:,1] = arrivals
+    data[:,2] = n_instructions
+
+    savepath = args.data_directory + args.filename + '.csv'
+    np.savetxt(savepath, data, fmt='%i', delimiter=',', header='PID,ArrivalTime,InstructionCount')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
