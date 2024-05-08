@@ -1,17 +1,24 @@
 import argparse
 import numpy as np
 
-def getRandomGenerator(name):
-    generators = {'n':np.random.normal,'u':np.random.uniform,'f':np.random.f,'cs':np.random.chisquare}
+def getRandomGenerator(name, seed):
+    generator = np.random.default_rng(seed=seed)
+    generators = {'n':generator.normal,'u':generator.uniform,'f':generator.f,'cs':generator.chisquare}
     return generators[name]
 
 def execute(args):
-    rng = getRandomGenerator(args.distribution)
+    rng = getRandomGenerator(args.distribution, args.seed)
     print(args)
 
     n = args.number
+    max_instructions = args.max_instructions
+    max_arrival = args.max_arrival
+
     data = np.zeros(shape=(n, 3), dtype=np.int16)
+    arrival_gen = np.random.default_rng(seed=args.seed)
+    arrival = arrival_gen.uniform(0, max_arrival, n).sort()
     
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
