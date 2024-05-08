@@ -5,5 +5,7 @@ Generate data with command like the following: python make_dataset.py -n 10 -ma 
 
 Use python make_dataset.py --help for all options
 
+PPO implementation guided by https://github.com/ericyangyu/PPO-for-Beginners
+
 CFS implementation inspired by https://github.com/SanchithHegde/completely-fair-scheduler/tree/main
 
