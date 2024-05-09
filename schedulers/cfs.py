@@ -1,4 +1,4 @@
-from scheduler import Scheduler
+from .scheduler import Scheduler
 
 class CFS(Scheduler):
     def __init__():
