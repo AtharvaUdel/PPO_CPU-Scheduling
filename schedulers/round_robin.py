@@ -23,6 +23,8 @@ class RoundRobin (Scheduler):
                 process[2] -= 1 # decrease InstructionCount
                 
                 if process[2] == 0: # if task is complete, move on
+                    consecutive = 0
+                    time += 1
                     continue
 
                 consecutive += 1
