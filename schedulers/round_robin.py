@@ -31,8 +31,17 @@ class RoundRobin (Scheduler):
                 if consecutive != quantum: # if quantum is not reached, add to front of queue
                     deq.appendleft(process)
                 else: # else add to end of queue
+
+                    # some rough code below to fix an edge case where quantum is reached and task is added at the same time
+                    # we want the new task to be added before the quantum limited task
+                    time += 1
+                    while self.data.size > 0 and self.data[0,1] == time:
+                        deq.append(self.data[0])
+                        self.data = self.data[1:]
                     deq.append(process)
+
                     consecutive = 0
+                    continue
             
             else: # if qeueue is empty, then store -1 in the gantt chart (list)
                 self.gantt.append(-1)
