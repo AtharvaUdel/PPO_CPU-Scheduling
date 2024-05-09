@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-import gym
+import gymnasium as gym
 from torch.distributions import MultivariateNormal
 from torch.optim import Adam
 from torch.nn import MSELoss
@@ -20,16 +20,19 @@ class PPO:
 
         # ALG STEP 1
         # Actor and critic networks
+        '''
         self.actor = FeedForwardNN(self.obs_enc_dim, self.act_dim)
         self.critic = FeedForwardNN(self.obs_enc_dim, self.act_dim)
-
+        '''
+        self.actor = FeedForwardNN(self.obs_dim, self.act_dim)
+        self.critic = FeedForwardNN(self.obs_dim, self.act_dim)
         # Observations encoder
-        self.obs_enc = FeedForwardNN(self.obs_dim, self.obs_enc_dim)
+        #self.obs_enc = FeedForwardNN(self.obs_dim, self.obs_enc_dim)
 
         # Network optimizers
         self.actor_optim = Adam(self.actor.parameters(), lr = self.lr)
         self.critic_optim = Adam(self.critic.parameters(), lr = self.lr)
-        self.obs_enc_optim = Adam(self.obs_enc.parameters(), lr = self.lr)
+        #self.obs_enc_optim = Adam(self.obs_enc.parameters(), lr = self.lr)
 
         # Multivariate Normal Stats
         self.cov_var = torch.full(size=(self.act_dim,), fill_value=0.5)
@@ -78,7 +81,7 @@ class PPO:
                 # Calculate losses.  Use Actor loss to pass through to encoder
                 actor_loss = (-torch.min(surr1, surr2)).mean()
                 critic_loss = MSELoss()(V, batch_rtgs)
-                encoder_loss = (-torch.min(surr1, surr2)).mean()
+                #encoder_loss = (-torch.min(surr1, surr2)).mean()
                 
                 # Perform backward propogation for actor network
                 self.actor_optim.zero_grad()
@@ -91,9 +94,11 @@ class PPO:
                 self.critic_optim.step()
 
                 # Perform backward propogation for encoder network
+                '''
                 self.obs_enc_optim.zero_grad()
                 encoder_loss.backward()
                 self.obs_enc_optim.step()
+                '''
 
     def rollout(self):
         # batch data
@@ -149,8 +154,8 @@ class PPO:
 
     def get_action(self, obs):
         # encode the observations and query the actor for mean action
-        enc_obs = self.obs_enc(obs)
-        mean = self.actor(enc_obs)
+        #obs = self.obs_enc(obs)
+        mean = self.actor(obs)
 
         # create multivariate normal distribution
         dist = MultivariateNormal(mean, self.cov_mat)
@@ -180,17 +185,13 @@ class PPO:
 
     def evaluate(self, batch_obs, batch_acts):
         # query critic network for value V for each obs in batch_obs after encoding
-        enc_batch_obs = self.obs_enc(batch_obs)
-        V = self.critic(enc_batch_obs).squeeze()
+        #batch_obs = self.obs_enc(batch_obs)
+        V = self.critic(batch_obs).squeeze()
 
         # get log probabilities
-        mean = self.actor(enc_batch_obs)
+        mean = self.actor(batch_obs)
         dist = MultivariateNormal(mean, self.cov_mat)
         log_probs = dist.log_prob(batch_acts)
 
         return V, log_probs
-    
-env = gym.make('Pendulum-v1')
-model = PPO(env, 64)
-torch.autograd.set_detect_anomaly(True)
-model.learn(10000)
+
