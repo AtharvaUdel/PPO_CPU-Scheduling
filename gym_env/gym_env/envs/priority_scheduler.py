@@ -37,7 +37,7 @@ class PrioritySchedulerEnv(gym.Env):
 
         info = self._get_info()
 
-        return self.execution_queue[:self.encoder_context], info
+        return self.execution_queue.queue[:self.encoder_context], info
     
     def step(self, action):
         # execute as much as possible between last step and now of current process
