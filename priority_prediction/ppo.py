@@ -13,7 +13,8 @@ class PPO:
         self.env = env
         self.obs_dim = env.observation_space.shape[0]
         self.obs_enc_dim = obs_enc_dim
-        self.act_dim = env.action_space.shape[0]
+        self.act_dim = env.action_space.n
+        #self.act_dim = env.action_space.shape[0]
 
         # Hyperparameters
         self._init_hyperparameters()

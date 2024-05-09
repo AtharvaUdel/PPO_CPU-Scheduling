@@ -11,16 +11,26 @@ class PrioritySchedulerEnv(gym.Env):
         self.encoder_context = encoder_context
         self.max_priority = max_priority
 
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(encoder_context, 4))
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(encoder_context, 4), dtype=np.int16)
 
         self.action_space = spaces.Discrete(max_priority)
 
         self.reset()
 
     def _get_info(self):
-        return None
+        return {'info': None}
+    
+    def _get_obs(self):
+        obs = np.zeros((self.encoder_context, 4), dtype=np.int16)
+        for i in range(self.encoder_context):
+            if i < len(self.execution_queue.queue):
+                obs[i,:] = self.execution_queue.queue[i, 1]
+            else:
+                break
+        return obs
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
         self.total_instructions = 0
         self.processes = []
         for pid in range(self.data.shape[0]):
@@ -35,9 +45,10 @@ class PrioritySchedulerEnv(gym.Env):
         self.current_processes = []
         self.execution_queue = PriorityQueue()
 
+        obs = self._get_obs()
         info = self._get_info()
 
-        return self.execution_queue.queue[:self.encoder_context], info
+        return obs, info
     
     def step(self, action):
         # execute as much as possible between last step and now of current process
