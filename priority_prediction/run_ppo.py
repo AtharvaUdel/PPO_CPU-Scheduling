@@ -11,3 +11,4 @@ env = gym.make("gym_env:gym_env/PriorityScheduler-v0", data=dataset, encoder_con
 model = PPO(env, 64)
 #torch.autograd.set_detect_anomaly(True)
 model.learn(10000)
+print(model.actor)

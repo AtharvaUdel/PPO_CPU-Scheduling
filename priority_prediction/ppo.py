@@ -8,10 +8,10 @@ from torch.nn import MSELoss
 from network import FeedForwardNN
 
 class PPO:
-    def __init__(self, env, obs_enc_dim) -> None:
+    def __init__(self, env: gym.Env, obs_enc_dim: int) -> None:
         # Environment information
         self.env = env
-        self.obs_dim = env.observation_space.shape[0]
+        self.obs_dim = env.observation_space.shape[0] * env.observation_space.shape[1]
         self.obs_enc_dim = obs_enc_dim
         self.act_dim = env.action_space.n
         #self.act_dim = env.action_space.shape[0]
@@ -26,7 +26,7 @@ class PPO:
         self.critic = FeedForwardNN(self.obs_enc_dim, self.act_dim)
         '''
         self.actor = FeedForwardNN(self.obs_dim, self.act_dim)
-        self.critic = FeedForwardNN(self.obs_dim, self.act_dim)
+        self.critic = FeedForwardNN(self.obs_dim, 1)
         # Observations encoder
         #self.obs_enc = FeedForwardNN(self.obs_dim, self.obs_enc_dim)
 
@@ -118,6 +118,7 @@ class PPO:
             ep_rews = []
 
             obs, _ = self.env.reset()
+            obs = np.ravel(obs)
             done = False
 
             for ep_t in range(self.max_timesteps_per_episode):
@@ -128,7 +129,9 @@ class PPO:
                 batch_obs.append(obs)
 
                 action, log_prob = self.get_action(obs)
+                #print(action)
                 obs, rew, done, _, _ = self.env.step(action)
+                obs = np.ravel(obs)
 
                 # Collect reward, action, and log_prob
                 ep_rews.append(rew)
@@ -181,18 +184,18 @@ class PPO:
 
         # convert to tensor
         batch_rtgs = torch.tensor(batch_rtgs, dtype=torch.float)
-
+        #print('rtgs', batch_rtgs.shape)
         return batch_rtgs
 
     def evaluate(self, batch_obs, batch_acts):
         # query critic network for value V for each obs in batch_obs after encoding
         #batch_obs = self.obs_enc(batch_obs)
         V = self.critic(batch_obs).squeeze()
+        #print('eval', V.detach().shape)
 
         # get log probabilities
         mean = self.actor(batch_obs)
         dist = MultivariateNormal(mean, self.cov_mat)
         log_probs = dist.log_prob(batch_acts)
-
         return V, log_probs
 
