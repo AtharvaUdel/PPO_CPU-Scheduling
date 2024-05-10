@@ -31,6 +31,11 @@ class PrioritySchedulerEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
+        if options != None:
+            try:
+                self.data = options['new_data']
+            except:
+                print('option not recognized - only \'new_data\' implemented')
         self.total_instructions = 0
         self.processes = []
         #print(self.data)
@@ -102,7 +107,7 @@ class PrioritySchedulerEnv(gym.Env):
                 break
 
         # Calculate Reward
-        reward = len(self.completed_processes)
+        reward = 100 * len(self.completed_processes) - sum(p[1] for p in self.completed_processes)
 
         # Check if all processes completed
         terminated = (len(self.processes) == len(self.completed_processes)) & (len(self.current_processes) == 0)
