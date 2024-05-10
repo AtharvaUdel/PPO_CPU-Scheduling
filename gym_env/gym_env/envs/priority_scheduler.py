@@ -24,7 +24,7 @@ class PrioritySchedulerEnv(gym.Env):
         obs = np.zeros((self.encoder_context, 4), dtype=np.int16)
         for i in range(self.encoder_context):
             if i < len(self.execution_queue.queue):
-                obs[i,:] = self.execution_queue.queue[i, 1]
+                obs[i,:] = self.execution_queue.queue[i][1]
             else:
                 break
         return obs
@@ -33,9 +33,10 @@ class PrioritySchedulerEnv(gym.Env):
         super().reset(seed=seed)
         self.total_instructions = 0
         self.processes = []
+        #print(self.data)
         for pid in range(self.data.shape[0]):
-            arrival_time = self.data[pid,1]
-            instructions = self.data[pid,2]
+            arrival_time = self.data[pid,1].astype(np.int16)
+            instructions = self.data[pid,2].astype(np.int16)
             self.total_instructions += instructions
             self.processes.append([pid, arrival_time, instructions, instructions])
 
@@ -56,29 +57,38 @@ class PrioritySchedulerEnv(gym.Env):
         # assign process priority with action
         # place process into prio queue
         # repeat until action list empty
-        delta_time = self.processes[self.data_pointer, 1] - self.current_time  # get time difference between last and this step
-        
-        # Add next process to current observation, add to priority queue, remove from list of processes
-        self.current_processes.append(self.processes[self.data_pointer])
-        self.execution_queue.put((action, self.processes[self.data_pointer]))
-        self.processes.pop(self.data_pointer)
+        if self.data_pointer < len(self.processes):
+            #print(self.processes)
+            #print(self.data_pointer)
+            #print(self.processes[self.data_pointer])
+            delta_time = (self.processes[self.data_pointer][1] - self.current_time).astype(np.int16)  # get time difference between last and this step
+            # Add next process to current observation, add to priority queue, remove from list of processes
+            self.current_processes.append(self.processes[self.data_pointer])
+            assign_priority = np.argmax(action)
+            #print(assign_priority)
+            self.execution_queue.put((assign_priority, (self.processes[self.data_pointer])))
+            #print(self.execution_queue.queue)
 
-        # Update current time to arrival time of this process
-        self.current_time = self.processes[self.data_pointer, 1]
-        self.data_pointer += 1 # increment data pointer
-
+            # Update current time to arrival time of this process
+            self.current_time = self.processes[self.data_pointer][1]
+            self.data_pointer += 1 # increment data pointer
+        else:
+            delta_time = 1
+            self.current_time += 1
         # Update highest priority process based on change in time
-        if len(self.processes) == 0:
-            delta_time = self.total_instructions
         for _ in range(delta_time):
-            if self.execution_queue.not_empty:
+            if len(self.current_processes) > 0:
                 current_process = self.execution_queue.queue[0]
                 remaining_instructions = current_process[1][3]
                 remaining_instructions -= 1
                 if remaining_instructions == 0:
                     _, proc = self.execution_queue.get()
                     pid = proc[0]
-                    working_index = self.current_processes[:,0].index(pid)
+                    #print(self.current_processes)
+                    #print(pid)
+                    #print(self.current_processes[:])
+                    working_index = [p[0] for p in self.current_processes].index(pid)
+                    #print(working_index)
                     turnaround_time = self.current_time - proc[1] 
                     self.completed_processes.append((pid, turnaround_time))
                     self.current_processes.pop(working_index)
@@ -87,7 +97,7 @@ class PrioritySchedulerEnv(gym.Env):
                     pid = current_process[1][0]
                     arrival = current_process[1][1]
                     instructions = current_process[1][2]
-                    self.execution_queue.queue[0] = (priority, (pid, arrival, instructions, remaining_instructions))
+                    self.execution_queue.queue[0] = (priority, [pid, arrival, instructions, remaining_instructions])
             else:
                 break
 
@@ -95,17 +105,18 @@ class PrioritySchedulerEnv(gym.Env):
         reward = len(self.completed_processes)
 
         # Check if all processes completed
-        terminated = (len(self.processes) == 0) & (len(self.current_processes) == 0)
+        terminated = (len(self.processes) == len(self.completed_processes)) & (len(self.current_processes) == 0)
 
         info = self._get_info()
+        obs = self._get_obs()
 
-        return self.current_processes[:self.encoder_context], reward, terminated, False, info
+        return obs, reward, terminated, False, info
     
     def render(self, mode='human'):
         print(f"Current Time: {self.current_time}")
         print("Running Processes:")
         for priority, process in self.execution_queue.queue:
-            print(f"  Priority: {process[0]}, PID: {process[0]}, Arrival Time: {process[1]}, Instructions: {process[2]}, Remaining: {process[3]}")
+            print(f"  Priority: {priority}, PID: {process[0]}, Arrival Time: {process[1]}, Instructions: {process[2]}, Remaining: {process[3]}")
         if self.execution_queue.not_empty:
             print(f"Current Process: PID {self.execution_queue.queue[0]}")
         print("Completed Processes:")
