@@ -46,4 +46,6 @@ model.learn(n_steps)
 print('Training on fifth dataset complete after', time.time() - start_time, 'seconds')
 start_time = time.time()
 
+print(model.actor)
 torch.save(model.actor.state_dict(), 'model_weights/ml_priority_scheduler.pt')
+
