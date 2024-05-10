@@ -11,8 +11,7 @@ class PrioritySchedulerEnv(gym.Env):
         self.encoder_context = encoder_context
         self.max_priority = max_priority
 
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(encoder_context, 4), dtype=np.int16)
-
+        self.observation_space = spaces.Box(low=-1, high=np.inf, shape=(encoder_context+1, 4), dtype=np.int16)
         self.action_space = spaces.Discrete(max_priority)
 
         self.reset()
@@ -21,10 +20,12 @@ class PrioritySchedulerEnv(gym.Env):
         return {'info': None}
     
     def _get_obs(self):
-        obs = np.zeros((self.encoder_context, 4), dtype=np.int16)
+        obs = np.ones((self.encoder_context+1, 4), dtype=np.int16) * (-1)
+        if len(self.processes) > self.data_pointer:
+            obs[0,:] = np.array(self.processes[self.data_pointer])
         for i in range(self.encoder_context):
             if i < len(self.execution_queue.queue):
-                obs[i,:] = self.execution_queue.queue[i][1]
+                obs[i+1,:] = self.execution_queue.queue[i][1]
             else:
                 break
         return obs
