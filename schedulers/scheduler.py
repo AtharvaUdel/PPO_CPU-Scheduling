@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+import time
 
 class Scheduler(ABC):
     def __init__(self):
@@ -45,6 +46,14 @@ class Scheduler(ABC):
             first_index = self.gantt.index(pid)
             response_times.append(first_index - arrival_time)
         return sum(response_times) / len(response_times)
+    
+    def time_run(self):
+        "Overhead - amount of time (real) to complete running a particular dataset"
+        start_time = time.time()
+        self.run()
+        stop_time = time.time()
+
+        return stop_time - start_time
 
     @abstractmethod
     def run():
