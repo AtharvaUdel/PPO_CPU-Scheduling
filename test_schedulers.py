@@ -1,7 +1,8 @@
 import numpy as np
-from round_robin import RoundRobin
-from fifo import FIFO
-from ml_prio import MLPriority
+from schedulers.round_robin import RoundRobin
+from schedulers.fifo import FIFO
+from schedulers.ml_prio import MLPriority
+
 
 rr = RoundRobin()
 fifo = FIFO()
@@ -19,5 +20,6 @@ data = np.genfromtxt("./dataset/test.csv", delimiter=',', skip_header=1)
 ml_prio = MLPriority(data=data, encoder_context=10, max_priority=10)
 prio_time = ml_prio.time_run()
 print('ML Priority:', ml_prio.gantt)
+print('ML Priority time:', prio_time)
 
 

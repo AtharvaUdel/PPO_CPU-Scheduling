@@ -1,18 +1,19 @@
-from scheduler import Scheduler
+from .scheduler import Scheduler
 from queue import PriorityQueue
-from ..priority_prediction.network import FeedForwardNN
+from priority_prediction.network import FeedForwardNN
 import numpy as np
+import torch
 
 class MLPriority(Scheduler):
     def __init__(self, data, encoder_context, max_priority):
+        super().__init__()
         self.data = np.zeros(shape=(data.shape[0], 4))
         self.data[:,:3] = data
-        self.data[:,4] = self.data[:,3]
+        self.data[:,3] = self.data[:,2]
         self.encoder_context = encoder_context
         self.max_priority = max_priority
-        self.model = FeedForwardNN(self.encoder_context * 4, self.max_priority)
-        self.model.load_state_dict('model_weights/ml_priority_scheduler.pt')
-        super.__init__()
+        self.model = FeedForwardNN((self.encoder_context + 1) * 5, self.max_priority)
+        self.model.load_state_dict(torch.load('model_weights/ml_priority_scheduler.pt'))
 
     def run(self):
         self.execution_queue = PriorityQueue()
@@ -22,7 +23,7 @@ class MLPriority(Scheduler):
 
             while self.data.size > 0 and self.data[0,1] == time: # add all processes to queue that arrrive at time
                 priority = self.get_priority()
-                self.execution_queue.put((priority, self.data[0]))
+                self.execution_queue.put((priority, list(self.data[0])))
                 self.data = self.data[1:]
             
             if len(self.execution_queue.queue) > 0: # if queue is not empty
@@ -44,14 +45,16 @@ class MLPriority(Scheduler):
 
     def get_priority(self):
         obs = self.get_observation().ravel()
-        priority = np.argmax(self.model(obs))
+        priority = np.argmax(self.model(obs).detach().numpy())
         return priority
 
     def get_observation(self):
-        obs = np.zeros((self.encoder_context, 4), dtype=np.int32)
+        obs = np.ones((self.encoder_context+1, 5), dtype=np.int32) * (-1)
+        obs[0,:4] = self.data[0]
         for i in range(self.encoder_context):
             if i < len(self.execution_queue.queue):
-                obs[i,:] = self.execution_queue.queue[i][1]
+                obs[i+1,:4] = self.execution_queue.queue[i][1]
+                obs[i+1,4] = self.execution_queue.queue[i][0]
             else:
                 break
         return obs
