@@ -15,7 +15,7 @@ def execute(args):
     max_instructions = args.max_instructions
     max_arrival = args.max_arrival
 
-    data = np.zeros(shape=(n, 3), dtype=np.int16)
+    data = np.zeros(shape=(n, 3), dtype=np.int32)
     pid = np.array(list(range(n)))
     arrival_gen = np.random.default_rng(seed=random_seed)
     arrivals = arrival_gen.uniform(0, max_arrival, n)
@@ -24,17 +24,17 @@ def execute(args):
     if random_dist == 'n':
         n_instructions = distribution_gen.normal(0,1,size=n) # standard normal distribution
         n_instructions = np.clip(n_instructions, -3, 3) + 3 # normal distribution is 0 mean and has infinite support, so must be clipped and recentered. 99.83% of data falls within (-3,3) bounds
-        n_instructions = ((n_instructions / 6) * max_instructions).astype(np.int16) # scale 0-1 and rescale to max, then cast to int
+        n_instructions = ((n_instructions / 6) * max_instructions).astype(np.int32) # scale 0-1 and rescale to max, then cast to int
     elif random_dist == 'u':
-        n_instructions = distribution_gen.uniform(low=0, high=max_instructions, size=n).astype(np.int16)
+        n_instructions = distribution_gen.uniform(low=0, high=max_instructions, size=n).astype(np.int32)
     elif random_dist == 'f':
         n_instructions = distribution_gen.f(5, 10, size=n) # F-distribution, range (0, inf)
         n_instructions = np.clip(n_instructions, 0, 10) # 99.88% of values fall within (0,10)
-        n_instructions = ((n_instructions / 10) * max_instructions).astype(np.int16) # scale 0-1 and rescale to max, then cast to int
+        n_instructions = ((n_instructions / 10) * max_instructions).astype(np.int32) # scale 0-1 and rescale to max, then cast to int
     elif random_dist == 'cs':
         n_instructions = distribution_gen.chisquare(3, size=n) # chi squared distribution, range (0, inf)
         n_instructions = np.clip(n_instructions, 0, 10) # 98.14% of values fall within (0,10)
-        n_instructions = ((n_instructions / 10) * max_instructions).astype(np.int16) # scale 0-1 and rescale to max, then cast to int
+        n_instructions = ((n_instructions / 10) * max_instructions).astype(np.int32) # scale 0-1 and rescale to max, then cast to int
     else:
         print('Specified distribution not implemented')
         exit

@@ -1,6 +1,6 @@
 from scheduler import Scheduler
 from queue import PriorityQueue
-from priority_prediction.network import FeedForwardNN
+from ..priority_prediction.network import FeedForwardNN
 import numpy as np
 
 class MLPriority(Scheduler):
@@ -44,11 +44,11 @@ class MLPriority(Scheduler):
 
     def get_priority(self):
         obs = self.get_observation().ravel()
-        priority = self.model(obs)
+        priority = np.argmax(self.model(obs))
         return priority
 
     def get_observation(self):
-        obs = np.zeros((self.encoder_context, 4), dtype=np.int16)
+        obs = np.zeros((self.encoder_context, 4), dtype=np.int32)
         for i in range(self.encoder_context):
             if i < len(self.execution_queue.queue):
                 obs[i,:] = self.execution_queue.queue[i][1]

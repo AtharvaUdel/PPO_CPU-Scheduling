@@ -11,7 +11,7 @@ class PrioritySchedulerEnv(gym.Env):
         self.encoder_context = encoder_context
         self.max_priority = max_priority
 
-        self.observation_space = spaces.Box(low=-1, high=np.inf, shape=(encoder_context+1, 4), dtype=np.int16)
+        self.observation_space = spaces.Box(low=-1, high=np.inf, shape=(encoder_context+1, 4), dtype=np.int32)
         self.action_space = spaces.Discrete(max_priority)
 
         self.reset()
@@ -20,7 +20,7 @@ class PrioritySchedulerEnv(gym.Env):
         return {'info': None}
     
     def _get_obs(self):
-        obs = np.ones((self.encoder_context+1, 4), dtype=np.int16) * (-1)
+        obs = np.ones((self.encoder_context+1, 4), dtype=np.int32) * (-1)
         if len(self.processes) > self.data_pointer:
             obs[0,:] = np.array(self.processes[self.data_pointer])
         for i in range(self.encoder_context):
@@ -41,8 +41,8 @@ class PrioritySchedulerEnv(gym.Env):
         self.processes = []
         #print(self.data)
         for pid in range(self.data.shape[0]):
-            arrival_time = self.data[pid,1].astype(np.int16)
-            instructions = self.data[pid,2].astype(np.int16)
+            arrival_time = self.data[pid,1].astype(np.int32)
+            instructions = self.data[pid,2].astype(np.int32)
             self.total_instructions += instructions
             self.processes.append([pid, arrival_time, instructions, instructions])
 
@@ -67,7 +67,7 @@ class PrioritySchedulerEnv(gym.Env):
             #print(self.processes)
             #print(self.data_pointer)
             #print(self.processes[self.data_pointer])
-            delta_time = (self.processes[self.data_pointer][1] - self.current_time).astype(np.int16)  # get time difference between last and this step
+            delta_time = (self.processes[self.data_pointer][1] - self.current_time).astype(np.int32)  # get time difference between last and this step
             # Add next process to current observation, add to priority queue, remove from list of processes
             self.current_processes.append(self.processes[self.data_pointer])
             assign_priority = np.argmax(action)
