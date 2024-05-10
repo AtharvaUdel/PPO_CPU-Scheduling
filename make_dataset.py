@@ -39,9 +39,9 @@ def execute(args):
         print('Specified distribution not implemented')
         exit
 
-    print(pid[:5])
-    print(arrivals[:5])
-    print(n_instructions[:5])
+    #print(pid[:5])
+    #print(arrivals[:5])
+    #print(n_instructions[:5])
 
     data[:,0] = pid
     data[:,1] = arrivals
