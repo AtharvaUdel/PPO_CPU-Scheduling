@@ -1,4 +1,4 @@
-from .scheduler import Scheduler
+from scheduler import Scheduler
 
 class MLPriority(Scheduler):
     def __init__(self, data):
