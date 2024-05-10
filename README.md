@@ -67,5 +67,13 @@ The following algoritms were used to compare against the PPO priority scheduler:
 - Round Robin (RR)
 - Completely Fair Scheduler (CFS)
 
+The following statistics are tracked for each algorithm:
+- CPU Utilization
+- Throughput
+- Average Turnaround Time
+- Average Waiting Time
+- Average Response Time
+- Overhead
+
 Results under construction
 
