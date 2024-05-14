@@ -3,24 +3,28 @@ import numpy as np
 import time
 
 class Scheduler(ABC):
-    def __init__(self):
+    def __init__(self, data):
         self.gantt = []
-        self.data = None
+        self.data = data
+        if data is not None:
+            self.pids = data[:,0].astype(int)
+            self.arrivals = data[:,1]
+            self.instr_count = data[:,2]
 
     def cpu_util(self):
-        "Ranges from 0 to 100 percent"
-        cpu_utilization = (len(self.gantt) - self.gantt.count(-1)) / len(self.gantt) * 100
-        return f"{cpu_utilization}%"
+        "Ranges from 0-1, can be converted to percentage"
+        cpu_utilization = (len(self.gantt) - self.gantt.count(-1)) / float(len(self.gantt))
+        return cpu_utilization
 
     def throughput(self):
         """Number of processes completed per time unit"""
         print("data size", self.data.shape[0])
-        return self.data.shape[0] / len(self.gantt)
+        return len(self.pids) / len(self.gantt)
 
     def turnaround_time(self):
         """Average turnaround time - time between submission to completion"""
         turnaround_times = []
-        for pid in self.data[:,0]:
+        for pid in self.pids:
             first_index = self.gantt.index(pid)
             last_index = len(self.gantt) - 1 - self.gantt[::-1].index(pid)
             turnaround_times.append(last_index - first_index)
@@ -29,10 +33,9 @@ class Scheduler(ABC):
     def waiting_time(self):
         "Average waiting time - amount of time a process has been waiting in the ready queue not including execution and I/O"
         waiting_times = []
-        for pid in self.data[:,0]:
-            row_index = np.where(self.data[:, 0] == pid)[0]
-            arrival_time = self.data[row_index[0], 1]
-            instruction_count = self.data[row_index[0], 2]
+        for pid in self.pids:
+            arrival_time = self.arrivals[pid]
+            instruction_count = self.arrivals[pid]
             finish_time = len(self.gantt) - 1 - self.gantt[::-1].index(pid)
             waiting_times.append(finish_time - arrival_time - instruction_count)
         return sum(waiting_times) / len(waiting_times)
@@ -40,9 +43,8 @@ class Scheduler(ABC):
     def response_time(self):
         "Average response time - amount of time it takes from when a request was submitted until the first response is produced"
         response_times = []
-        for pid in self.data[:,0]:
-            row_index = np.where(self.data[:, 0] == pid)[0]
-            arrival_time = self.data[row_index[0], 1]
+        for pid in self.pids:
+            arrival_time = self.arrivals[pid]
             first_index = self.gantt.index(pid)
             response_times.append(first_index - arrival_time)
         return sum(response_times) / len(response_times)
@@ -52,8 +54,14 @@ class Scheduler(ABC):
         start_time = time.time()
         self.run()
         stop_time = time.time()
+        self.stat_runtime = stop_time - start_time
 
-        return stop_time - start_time
+    def calc_stats(self):
+        self.stat_cpu_util = self.cpu_util()
+        self.stat_throughput = self.throughput()
+        self.stat_turnaround_time = self.turnaround_time()
+        self.stat_response_time = self.response_time()
+        self.stat_waiting_time = self.waiting_time()
 
     @abstractmethod
     def run():
