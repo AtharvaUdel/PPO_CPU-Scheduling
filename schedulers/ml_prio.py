@@ -6,10 +6,13 @@ import torch
 
 class MLPriority(Scheduler):
     def __init__(self, data, **kwargs):
-        super().__init__()
+        super().__init__(data=None)
         self.data = np.zeros(shape=(data.shape[0], 4))
         self.data[:,:3] = data
         self.data[:,3] = self.data[:,2]
+        self.pids = data[:,0]
+        self.arrivals = data[:,1]
+        self.instr_count = data[:,2]
         try:
             self.encoder_context = kwargs['encoder_context']
             self.max_priority = kwargs['max_priority']

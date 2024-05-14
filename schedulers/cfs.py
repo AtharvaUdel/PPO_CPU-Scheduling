@@ -6,8 +6,7 @@ import random
 
 class CFS(Scheduler):
     def __init__(self, data, **kwargs):
-        super().__init__()
-        self.data = data
+        super().__init__(data=data)
 
     def run(self):
         zeros_col = np.zeros((self.data.shape[0], 1)) # add a column for vruntime

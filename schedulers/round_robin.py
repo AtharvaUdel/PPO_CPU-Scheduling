@@ -3,8 +3,7 @@ from collections import deque
 
 class RoundRobin (Scheduler):
     def __init__ (self, data):
-        super().__init__()
-        self.data = data
+        super().__init__(data=data)
     
     def run(self):
         deq = deque()

@@ -5,8 +5,7 @@ from collections import deque
 
 class MLQ(Scheduler):
     def __init__(self, data):
-        super().__init__()
-        self.data = data
+        super().__init__(data=data)
         self.queues = [deque(), deque(), deque()]  # Three priority queues
 
     def run(self):
