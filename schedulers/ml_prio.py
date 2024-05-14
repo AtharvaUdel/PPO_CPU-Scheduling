@@ -5,13 +5,16 @@ import numpy as np
 import torch
 
 class MLPriority(Scheduler):
-    def __init__(self, data, encoder_context, max_priority):
+    def __init__(self, data, **kwargs):
         super().__init__()
         self.data = np.zeros(shape=(data.shape[0], 4))
         self.data[:,:3] = data
         self.data[:,3] = self.data[:,2]
-        self.encoder_context = encoder_context
-        self.max_priority = max_priority
+        try:
+            self.encoder_context = kwargs['encoder_context']
+            self.max_priority = kwargs['max_priority']
+        except NotImplementedError:
+            print("MLPriority must be instantiated with \'encoder_context\' and \'max_priority\' keyword args")
         self.model = FeedForwardNN((self.encoder_context + 1) * 5, self.max_priority)
         self.model.load_state_dict(torch.load('model_weights/ml_priority_scheduler_1mil.pt'))
 

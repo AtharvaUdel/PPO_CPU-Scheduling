@@ -5,8 +5,9 @@ import math
 import random
 
 class CFS(Scheduler):
-    def __init__(self):
+    def __init__(self, data, **kwargs):
         super().__init__()
+        self.data = data
 
     def run(self):
         zeros_col = np.zeros((self.data.shape[0], 1)) # add a column for vruntime

@@ -3,8 +3,9 @@ from collections import deque
 import numpy as np
 
 class MFQ(Scheduler):
-    def __init__():
+    def __init__(self, data, **kwargs):
         super().__init__()
+        self.data = data
         self.queues = [deque() for _ in range(3)]  # Three levels of queues
         self.quantums = [4, 8, 15]  # Different time quantum for each queue level
 
