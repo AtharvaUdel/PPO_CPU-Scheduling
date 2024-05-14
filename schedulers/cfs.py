@@ -11,7 +11,7 @@ class CFS(Scheduler):
     def run(self):
         zeros_col = np.zeros((self.data.shape[0], 1)) # add a column for vruntime
         self.data = np.hstack((self.data, zeros_col))
-        print(self.data)
+        #print(self.data)
 
         deq = deque()
         time = 0

@@ -18,7 +18,7 @@ class Scheduler(ABC):
 
     def throughput(self):
         """Number of processes completed per time unit"""
-        print("data size", self.data.shape[0])
+        #print("data size", self.data.shape[0])
         return len(self.pids) / len(self.gantt)
 
     def turnaround_time(self):
@@ -62,6 +62,14 @@ class Scheduler(ABC):
         self.stat_turnaround_time = self.turnaround_time()
         self.stat_response_time = self.response_time()
         self.stat_waiting_time = self.waiting_time()
+
+    def print_stats(self):
+        print("CPU Utilization :",self.stat_cpu_util)
+        print("Throughput      :",self.stat_throughput)
+        print("Turnaround Time :",self.stat_turnaround_time)
+        print("Waiting Time    :",self.stat_waiting_time)
+        print("Response Time   :",self.stat_response_time)
+        print("Runtime         :",self.stat_runtime)
 
     @abstractmethod
     def run():

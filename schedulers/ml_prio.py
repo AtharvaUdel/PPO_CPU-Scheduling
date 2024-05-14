@@ -10,7 +10,7 @@ class MLPriority(Scheduler):
         self.data = np.zeros(shape=(data.shape[0], 4))
         self.data[:,:3] = data
         self.data[:,3] = self.data[:,2]
-        self.pids = data[:,0]
+        self.pids = data[:,0].astype(int)
         self.arrivals = data[:,1]
         self.instr_count = data[:,2]
         try:
@@ -29,7 +29,7 @@ class MLPriority(Scheduler):
 
             while self.data.size > 0 and self.data[0,1] == time: # add all processes to queue that arrrive at time
                 priority = self.get_priority()
-                print(priority)
+                #print(priority)
                 self.execution_queue.put((priority, list(self.data[0])))
                 self.data = self.data[1:]
             
