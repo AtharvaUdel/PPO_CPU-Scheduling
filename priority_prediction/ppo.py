@@ -41,8 +41,8 @@ class PPO:
 
     def _init_hyperparameters(self):
         # Default hyperparameter values - NEED TO CHANGE
-        self.timesteps_per_batch = 4800
-        self.max_timesteps_per_episode = 1600
+        self.timesteps_per_batch = 100000
+        self.max_timesteps_per_episode = 10000
         self.gamma = 0.95 # reward decay
         self.n_updates_per_iteration = 5
         self.clip = 0.2 # recommended by PPO paper

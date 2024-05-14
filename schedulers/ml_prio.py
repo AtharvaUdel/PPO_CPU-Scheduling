@@ -13,7 +13,7 @@ class MLPriority(Scheduler):
         self.encoder_context = encoder_context
         self.max_priority = max_priority
         self.model = FeedForwardNN((self.encoder_context + 1) * 5, self.max_priority)
-        self.model.load_state_dict(torch.load('model_weights/ml_priority_scheduler.pt'))
+        self.model.load_state_dict(torch.load('model_weights/ml_priority_scheduler_1mil.pt'))
 
     def run(self):
         self.execution_queue = PriorityQueue()
@@ -23,6 +23,7 @@ class MLPriority(Scheduler):
 
             while self.data.size > 0 and self.data[0,1] == time: # add all processes to queue that arrrive at time
                 priority = self.get_priority()
+                print(priority)
                 self.execution_queue.put((priority, list(self.data[0])))
                 self.data = self.data[1:]
             

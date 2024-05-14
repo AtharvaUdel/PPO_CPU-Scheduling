@@ -13,10 +13,10 @@ dataset3 = np.genfromtxt("./dataset/dataset3.csv", delimiter=',', skip_header=1)
 dataset4 = np.genfromtxt("./dataset/dataset4.csv", delimiter=',', skip_header=1)
 dataset5 = np.genfromtxt("./dataset/dataset5.csv", delimiter=',', skip_header=1)
 
-env = gym.make("gym_env:gym_env/PriorityScheduler-v0", data=dataset1, encoder_context=10, max_priority=10)
+env = gym.make("gym_env:gym_env/PriorityScheduler-v0", data=dataset1, encoder_context=30, max_priority=10)
 model = PPO(env, 64)
 
-n_steps = 10000
+n_steps = 5000000
 
 print('Training PPO model with', n_steps, 'per dataset')
 start_time = time.time()
@@ -47,5 +47,5 @@ print('Training on fifth dataset complete after', time.time() - start_time, 'sec
 start_time = time.time()
 
 print(model.actor)
-torch.save(model.actor.state_dict(), 'model_weights/ml_priority_scheduler.pt')
+torch.save(model.actor.state_dict(), 'model_weights/ml_priority_scheduler_5mil_30context.pt')
 
