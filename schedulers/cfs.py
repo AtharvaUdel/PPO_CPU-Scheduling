@@ -36,10 +36,8 @@ class CFS(Scheduler):
 
                 process = deq.popleft()
                 self.gantt.append(int(process[0])) # store PID in gantt
-                process[2] -= 1
-
-                for item in deq:
-                    item[3] += 1 # increment the vruntime for all waiting processes
+                process[2] -= 1 # decrement instructionCount
+                process[3] += 1 # incremement vruntime of active process
 
                 if process[2] == 0: # if task is complete, move on
                     consecutive = 0
