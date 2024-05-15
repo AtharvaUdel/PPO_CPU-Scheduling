@@ -58,7 +58,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--number', help="number of data entries to generate", required=True, type=int)
     parser.add_argument('-mi', '--max_instructions', help='maximum number of instructions a process can have', type=int, default=40)
     parser.add_argument('-ma', '--max_arrival', help='maximum time of process arrival', required=True, type=int)
-    parser.add_argument('-d', '--distribution', help='type of random distribution: \n\tn(normal)\n\tu(uniform)\n\tf(F) - default\n\tcs(chi-square)', choices=['n','u','f','cs'], default='f')
+    parser.add_argument('-d', '--distribution', help='type of random distribution: \n\tn(normal)\n\tu(uniform)\n\tf(F) - default\n\tf(F)', choices=['n','u','f','cs'], default='f')
     parser.add_argument('-s', '--seed', help='random seed', type=int, default=42)
     parser.add_argument('-f', '--filename', help='name of file to save', required=True)
     parser.add_argument('-dir', '--data_directory', help='directory to save dataset', default='dataset/')
