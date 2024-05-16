@@ -45,7 +45,7 @@ def execute(args):
 
     data[:,0] = pid
     data[:,1] = arrivals
-    data[:,2] = n_instructions
+    data[:,2] = np.clip(n_instructions, 1, max_instructions)
 
     savepath = args.data_directory + args.filename + '.csv'
     np.savetxt(savepath, data, fmt='%i', delimiter=',', header='PID,ArrivalTime,InstructionCount')
