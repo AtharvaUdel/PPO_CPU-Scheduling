@@ -61,9 +61,19 @@ The model weights for the actor model will be saved to `model_weights/ml_priorit
 An basic example for training can be seen at `priority_prediction/run_ppo_example.py` 
 
 ## Evaluate Results
+Three test suites were generated for the evaluation of the model. To generate these test files, run the command 
+```
+bash make_testing_data.sh
+```
+
+- Test 1 contains datasets of increasing number of tasks.
+- Test 2 contains datasets of varying statistical distribution.
+- Test 3 contains datasets of increasing average burst time of processes.
+
+
 The following algoritms were used to compare against the PPO priority scheduler:
 - First in First Out (FIFO)
-- Multilevel Feedback Queue (MFQ)
+- Multilevel Queue (MLQ)
 - Round Robin (RR)
 - Completely Fair Scheduler (CFS)
 
@@ -75,5 +85,7 @@ The following statistics are tracked for each algorithm:
 - Average Response Time
 - Overhead
 
-Results under construction
+Code to generate tabulated results is ;ocated within the jupyter notebook `results_report.ipynb`, and tables are saved to `results/test#`
+
+Figure generation code is contained within `plot figures.ipynb`
 
