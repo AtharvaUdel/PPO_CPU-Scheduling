@@ -61,7 +61,7 @@ class Scheduler(ABC):
         self.stat_throughput = self.throughput()
         self.stat_turnaround_time = self.turnaround_time()
         self.stat_response_time = self.response_time()
-        self.stat_waiting_time = self.waiting_time()
+        self.stat_waiting_time = -self.waiting_time()
         self.stat_mean_runtime = self.stat_runtime / len(self.pids)
 
     def print_stats(self):
