@@ -2,7 +2,7 @@ from .scheduler import Scheduler
 from collections import deque
 
 class RoundRobin (Scheduler):
-    def __init__ (self, data):
+    def __init__ (self, data, **kwargs):
         super().__init__(data=data)
     
     def run(self):

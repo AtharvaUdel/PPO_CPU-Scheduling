@@ -36,7 +36,7 @@ class MFQ(Scheduler):
                     break  # Only one process from one queue at a time
                 elif i == len(self.queues) - 1:  # If all queues were empty
                     self.gantt.append(-1)  # CPU idle
-
+            '''
             # Priority boost for waiting processes
             for i in range(1, len(self.queues)):
                 to_promote = []
@@ -46,5 +46,6 @@ class MFQ(Scheduler):
                 for p in to_promote:
                     self.queues[i].remove(p)
                     self.queues[i - 1].append(p)  # Move to higher priority queue
+            '''
 
         return
